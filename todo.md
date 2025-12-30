@@ -80,7 +80,7 @@
 - [x] Chapter body templates with image placement options
 - [x] Inline image support with text wrapping
 - [x] Full-width image breaks within chapters
-- [ ] Pull quotes and callout boxes
+- [x] Pull quotes and callout boxes
 
 ## Graphic Novel Mode
 - [x] Full-page image layout support
@@ -96,3 +96,16 @@
 - [x] First page of chapter header suppression
 - [x] Custom footer text and formatting
 - [x] Header/footer font and style options
+
+
+## Enhancement Features (v4.0)
+- [x] Pull quotes component with multiple styles
+- [x] Callout boxes (tip, warning, note, info)
+- [x] Template preview gallery with live rendered examples
+- [x] Batch image upload with drag-and-drop
+- [x] Auto-distribute images based on Word markers
+- [x] Enhanced landing page with sign-in button
+- [x] Pricing section on landing page
+- [x] Stronger CTAs throughout landing page
+- [x] Feature comparison table
+- [x] Social proof section (testimonials)
