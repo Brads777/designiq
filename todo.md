@@ -73,3 +73,26 @@
 - [x] Contextual help tooltips
 - [x] Feedback submission system
 - [x] Settings page with user preferences
+
+
+## Chapter Page Templates
+- [x] Multiple chapter intro templates (centered, left-aligned, full-bleed image, decorative)
+- [x] Chapter body templates with image placement options
+- [x] Inline image support with text wrapping
+- [x] Full-width image breaks within chapters
+- [ ] Pull quotes and callout boxes
+
+## Graphic Novel Mode
+- [x] Full-page image layout support
+- [x] Image-only pages without text
+- [x] Panel grid templates for comic layouts
+- [x] Speech bubble overlay support
+- [x] Page bleed settings for edge-to-edge images
+
+## Page Headers & Footers
+- [x] Customizable running headers (book title, chapter title, author)
+- [x] Page number positioning options (bottom center, corners, alternating)
+- [x] Different headers for odd/even pages
+- [x] First page of chapter header suppression
+- [x] Custom footer text and formatting
+- [x] Header/footer font and style options

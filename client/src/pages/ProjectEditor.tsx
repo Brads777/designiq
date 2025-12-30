@@ -35,6 +35,10 @@ import { StylePreview } from "@/components/StylePreview";
 import { ExportPanel } from "@/components/ExportPanel";
 import { DemoModeIndicator } from "@/components/DemoModeIndicator";
 import { useSubscription } from "@/hooks/useSubscription";
+import { ChapterTemplateSelector } from "@/components/ChapterTemplateSelector";
+import { HeaderFooterEditor, HeaderFooterConfig } from "@/components/HeaderFooterEditor";
+import { ChapterImageManager, ChapterImage } from "@/components/ChapterImageManager";
+import { GraphicNovelEditor } from "@/components/GraphicNovelEditor";
 
 // Book interior themes
 const BOOK_THEMES = [
@@ -151,6 +155,43 @@ export default function ProjectEditor() {
 
   const [selectedTheme, setSelectedTheme] = useState("classic-fiction");
   const [selectedTrimSize, setSelectedTrimSize] = useState(TRIM_SIZES[3]); // 6x9 default
+  const [selectedIntroTemplate, setSelectedIntroTemplate] = useState("intro-classic-centered");
+  const [selectedBodyTemplate, setSelectedBodyTemplate] = useState("body-text-only");
+  const [isGraphicNovel, setIsGraphicNovel] = useState(false);
+  const [headerFooterConfig, setHeaderFooterConfig] = useState<HeaderFooterConfig>({
+    headerEnabled: true,
+    headerLeftContent: "book-title",
+    headerCenterContent: "none",
+    headerRightContent: "chapter-title",
+    headerCustomLeft: "",
+    headerCustomCenter: "",
+    headerCustomRight: "",
+    footerEnabled: true,
+    footerLeftContent: "none",
+    footerCenterContent: "page-number",
+    footerRightContent: "none",
+    footerCustomLeft: "",
+    footerCustomCenter: "",
+    footerCustomRight: "",
+    useDifferentOddEven: true,
+    mirrorOnEvenPages: true,
+    suppressOnChapterFirst: true,
+    headerFont: "inherit",
+    headerFontSize: "10pt",
+    footerFont: "inherit",
+    footerFontSize: "10pt",
+    pageNumberStyle: "arabic",
+    pageNumberPrefix: "",
+    pageNumberSuffix: ""
+  });
+  const [chapterImages, setChapterImages] = useState<ChapterImage[]>([]);
+  const [graphicNovelPages, setGraphicNovelPages] = useState<any[]>([{
+    id: "1",
+    pageNumber: 1,
+    layoutType: "single",
+    panels: [{ id: "p1", positionX: 0, positionY: 0, width: 100, height: 100, borderWidth: "2px", borderColor: "#000000" }],
+    bubbles: []
+  }]);
 
   // Update copyright form when data loads
   useEffect(() => {
@@ -280,7 +321,7 @@ export default function ProjectEditor() {
       {/* Main Content */}
       <main className="container py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid">
+          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 lg:w-auto lg:inline-grid">
             <TabsTrigger value="upload" className="gap-2">
               <Upload className="h-4 w-4" />
               <span className="hidden sm:inline">Upload</span>
@@ -288,6 +329,14 @@ export default function ProjectEditor() {
             <TabsTrigger value="styles" className="gap-2">
               <Type className="h-4 w-4" />
               <span className="hidden sm:inline">Styles</span>
+            </TabsTrigger>
+            <TabsTrigger value="templates" className="gap-2">
+              <Sparkles className="h-4 w-4" />
+              <span className="hidden sm:inline">Templates</span>
+            </TabsTrigger>
+            <TabsTrigger value="headers" className="gap-2">
+              <FileText className="h-4 w-4" />
+              <span className="hidden sm:inline">Headers</span>
             </TabsTrigger>
             <TabsTrigger value="theme" className="gap-2">
               <Palette className="h-4 w-4" />
@@ -457,6 +506,86 @@ export default function ProjectEditor() {
                     <p>Upload a document to detect styles</p>
                   </div>
                 )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Templates Tab */}
+          <TabsContent value="templates" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Chapter Templates</CardTitle>
+                <CardDescription>
+                  Choose how your chapters will be laid out, including intro pages and body content.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ChapterTemplateSelector
+                  selectedIntroTemplate={selectedIntroTemplate}
+                  selectedBodyTemplate={selectedBodyTemplate}
+                  onSelectIntroTemplate={setSelectedIntroTemplate}
+                  onSelectBodyTemplate={setSelectedBodyTemplate}
+                  isGraphicNovel={isGraphicNovel}
+                  onToggleGraphicNovel={setIsGraphicNovel}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Chapter Images */}
+            {!isGraphicNovel && chapters && chapters.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Chapter Images</CardTitle>
+                  <CardDescription>
+                    Add images to your chapters with various placement options.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ChapterImageManager
+                    chapterId={chapters[0]?.id || 0}
+                    images={chapterImages}
+                    onImagesChange={setChapterImages}
+                  />
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Graphic Novel Editor */}
+            {isGraphicNovel && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Graphic Novel Pages</CardTitle>
+                  <CardDescription>
+                    Design your graphic novel with panel layouts and speech bubbles.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <GraphicNovelEditor
+                    projectId={projectId}
+                    pages={graphicNovelPages}
+                    onPagesChange={setGraphicNovelPages}
+                  />
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* Headers & Footers Tab */}
+          <TabsContent value="headers" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Page Headers & Footers</CardTitle>
+                <CardDescription>
+                  Configure running headers, footers, and page numbers for your book.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <HeaderFooterEditor
+                  config={headerFooterConfig}
+                  onChange={setHeaderFooterConfig}
+                  bookTitle={project?.title}
+                  authorName={project?.author || undefined}
+                />
               </CardContent>
             </Card>
           </TabsContent>
