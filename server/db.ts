@@ -20,7 +20,13 @@ import {
   StyleMapping,
   exportJobs,
   InsertExportJob,
-  ExportJob
+  ExportJob,
+  feedback,
+  InsertFeedback,
+  Feedback,
+  userSettings,
+  InsertUserSettings,
+  UserSettings
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -108,6 +114,21 @@ export async function getUserByOpenId(openId: string) {
 
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
   return result.length > 0 ? result[0] : undefined;
+}
+
+export async function updateUserSubscription(
+  userId: number,
+  data: {
+    stripeCustomerId?: string | null;
+    stripeSubscriptionId?: string | null;
+    subscriptionStatus?: "none" | "active" | "canceled" | "past_due" | "lifetime";
+    subscriptionPlan?: "none" | "monthly" | "annual" | "lifetime";
+  }
+): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.update(users).set(data).where(eq(users.id, userId));
 }
 
 // ============ PROJECT FUNCTIONS ============
@@ -321,4 +342,73 @@ export async function updateExportJob(id: number, data: Partial<Omit<InsertExpor
   await db.update(exportJobs).set(data).where(eq(exportJobs.id, id));
   const [job] = await db.select().from(exportJobs).where(eq(exportJobs.id, id));
   return job;
+}
+
+
+// ============ ONBOARDING FUNCTIONS ============
+
+export async function updateUserOnboarding(
+  userId: number,
+  data: {
+    hasAcceptedTos?: boolean;
+    tosAcceptedAt?: Date;
+    hasCompletedOnboarding?: boolean;
+    onboardingStep?: number;
+  }
+): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.update(users).set(data).where(eq(users.id, userId));
+}
+
+// ============ FEEDBACK FUNCTIONS ============
+
+export async function createFeedback(data: Omit<InsertFeedback, 'id' | 'createdAt' | 'updatedAt' | 'status'>): Promise<Feedback> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(feedback).values(data);
+  const insertId = result[0].insertId;
+  
+  const [item] = await db.select().from(feedback).where(eq(feedback.id, insertId));
+  return item;
+}
+
+export async function getFeedbackByUserId(userId: number): Promise<Feedback[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db.select().from(feedback).where(eq(feedback.userId, userId)).orderBy(desc(feedback.createdAt));
+}
+
+// ============ USER SETTINGS FUNCTIONS ============
+
+export async function getUserSettings(userId: number): Promise<UserSettings | null> {
+  const db = await getDb();
+  if (!db) return null;
+
+  const [settings] = await db.select().from(userSettings).where(eq(userSettings.userId, userId));
+  return settings || null;
+}
+
+export async function upsertUserSettings(
+  userId: number,
+  data: Partial<Omit<InsertUserSettings, 'id' | 'userId' | 'createdAt' | 'updatedAt'>>
+): Promise<UserSettings> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const existing = await getUserSettings(userId);
+  
+  if (existing) {
+    await db.update(userSettings).set(data).where(eq(userSettings.userId, userId));
+    const [updated] = await db.select().from(userSettings).where(eq(userSettings.userId, userId));
+    return updated;
+  } else {
+    const result = await db.insert(userSettings).values({ userId, ...data });
+    const insertId = result[0].insertId;
+    const [created] = await db.select().from(userSettings).where(eq(userSettings.id, insertId));
+    return created;
+  }
 }

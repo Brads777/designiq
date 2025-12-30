@@ -47,3 +47,29 @@
 - [x] Style preview and editor
 - [x] Cover design workspace
 - [x] Export and download center
+
+
+## Stripe Payment Integration
+- [ ] Add Stripe feature to project
+- [ ] Configure subscription products (Monthly $20, Annual $200, Lifetime $600)
+- [ ] Create pricing page with subscription tiers
+- [ ] Implement checkout flow with Stripe
+- [ ] Add subscription status checks to protected features
+- [ ] Build demo mode for non-subscribers
+
+## GitHub Repository
+- [ ] Create GitHub repository at brads777
+- [ ] Push codebase to repository
+
+
+## Onboarding & Authentication
+- [x] Terms of Service acceptance flow
+- [x] Step-by-step training/tutorial system
+- [x] Onboarding wizard for new users
+- [x] First-time user experience
+
+## Help & Support
+- [x] Help center with documentation
+- [x] Contextual help tooltips
+- [x] Feedback submission system
+- [x] Settings page with user preferences

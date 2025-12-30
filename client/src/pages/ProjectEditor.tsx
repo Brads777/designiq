@@ -33,6 +33,8 @@ import { toast } from "sonner";
 import { ThemeSelector } from "@/components/ThemeSelector";
 import { StylePreview } from "@/components/StylePreview";
 import { ExportPanel } from "@/components/ExportPanel";
+import { DemoModeIndicator } from "@/components/DemoModeIndicator";
+import { useSubscription } from "@/hooks/useSubscription";
 
 // Book interior themes
 const BOOK_THEMES = [
@@ -262,6 +264,7 @@ export default function ProjectEditor() {
           </div>
           
           <div className="flex items-center gap-2">
+            <DemoModeIndicator variant="badge" />
             <Button variant="outline" onClick={() => setLocation(`/project/${projectId}/cover`)}>
               <ImageIcon className="mr-2 h-4 w-4" />
               Cover Designer

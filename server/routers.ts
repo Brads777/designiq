@@ -25,8 +25,15 @@ import {
   getStyleMappingsByProjectId,
   updateStyleMapping,
   createExportJob,
-  getExportJobsByProjectId
+  getExportJobsByProjectId,
+  updateUserSubscription,
+  updateUserOnboarding,
+  createFeedback,
+  getUserSettings,
+  upsertUserSettings
 } from "./db";
+import { createCheckoutSession, createBillingPortalSession, getSubscriptionDetails } from "./stripe/stripeService";
+import { SUBSCRIPTION_PLANS, DEMO_LIMITS, SUBSCRIBER_FEATURES } from "./stripe/products";
 
 export const appRouter = router({
   system: systemRouter,
@@ -503,6 +510,133 @@ export const appRouter = router({
         await updateProject(input.projectId, { status: "exported" });
 
         return result;
+      }),
+  }),
+
+  // Subscription management
+  subscription: router({
+    // Get current user's subscription status
+    status: protectedProcedure.query(async ({ ctx }) => {
+      const user = ctx.user;
+      const isSubscribed = user.subscriptionStatus === "active" || user.subscriptionStatus === "lifetime";
+      
+      let subscriptionDetails = null;
+      if (user.stripeSubscriptionId && user.subscriptionStatus !== "lifetime") {
+        subscriptionDetails = await getSubscriptionDetails(user.stripeSubscriptionId);
+      }
+
+      return {
+        isSubscribed,
+        status: user.subscriptionStatus,
+        plan: user.subscriptionPlan,
+        features: isSubscribed ? SUBSCRIBER_FEATURES : DEMO_LIMITS,
+        subscriptionDetails
+      };
+    }),
+
+    // Get available plans
+    plans: publicProcedure.query(() => {
+      return {
+        plans: SUBSCRIPTION_PLANS,
+        demoLimits: DEMO_LIMITS
+      };
+    }),
+
+    // Create checkout session
+    createCheckout: protectedProcedure
+      .input(z.object({
+        planId: z.enum(["monthly", "annual", "lifetime"])
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const origin = ctx.req.headers.origin || "http://localhost:3000";
+        
+        return createCheckoutSession({
+          userId: ctx.user.id,
+          userEmail: ctx.user.email || "",
+          userName: ctx.user.name,
+          planId: input.planId,
+          origin
+        });
+      }),
+
+    // Create billing portal session for managing subscription
+    createPortalSession: protectedProcedure.mutation(async ({ ctx }) => {
+      if (!ctx.user.stripeCustomerId) {
+        throw new Error("No Stripe customer found");
+      }
+
+      const origin = ctx.req.headers.origin || "http://localhost:3000";
+      
+      return createBillingPortalSession({
+        customerId: ctx.user.stripeCustomerId,
+        returnUrl: `${origin}/dashboard`
+      });
+    }),
+  }),
+
+  // Onboarding management
+  onboarding: router({
+    acceptTos: protectedProcedure.mutation(async ({ ctx }) => {
+      await updateUserOnboarding(ctx.user.id, {
+        hasAcceptedTos: true,
+        tosAcceptedAt: new Date()
+      });
+      return { success: true };
+    }),
+
+    updateStep: protectedProcedure
+      .input(z.object({ step: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        await updateUserOnboarding(ctx.user.id, {
+          onboardingStep: input.step
+        });
+        return { success: true };
+      }),
+
+    complete: protectedProcedure.mutation(async ({ ctx }) => {
+      await updateUserOnboarding(ctx.user.id, {
+        hasCompletedOnboarding: true
+      });
+      return { success: true };
+    }),
+  }),
+
+  // Feedback system
+  feedback: router({
+    submit: protectedProcedure
+      .input(z.object({
+        type: z.enum(["bug", "feature", "general", "support"]),
+        subject: z.string().min(1).max(255),
+        message: z.string().min(1),
+        pageUrl: z.string().max(500).optional(),
+        browserInfo: z.string().optional()
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return createFeedback({
+          userId: ctx.user.id,
+          ...input
+        });
+      }),
+  }),
+
+  // User settings
+  settings: router({
+    get: protectedProcedure.query(async ({ ctx }) => {
+      return getUserSettings(ctx.user.id);
+    }),
+
+    update: protectedProcedure
+      .input(z.object({
+        emailNotifications: z.boolean().optional(),
+        marketingEmails: z.boolean().optional(),
+        defaultTheme: z.string().max(64).optional(),
+        defaultPaperType: z.enum(["white", "cream", "color"]).optional(),
+        defaultTrimSize: z.string().max(20).optional(),
+        showTutorialTips: z.boolean().optional(),
+        compactView: z.boolean().optional()
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return upsertUserSettings(ctx.user.id, input);
       }),
   }),
 });

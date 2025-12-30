@@ -8,12 +8,24 @@ import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
 import ProjectEditor from "./pages/ProjectEditor";
 import CoverDesigner from "./pages/CoverDesigner";
+import Pricing from "./pages/Pricing";
+import SubscriptionSuccess from "./pages/SubscriptionSuccess";
+import Onboarding from "./pages/Onboarding";
+import Settings from "./pages/Settings";
+import Help from "./pages/Help";
+import Feedback from "./pages/Feedback";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/dashboard" component={Dashboard} />
+      <Route path="/pricing" component={Pricing} />
+      <Route path="/subscription/success" component={SubscriptionSuccess} />
+      <Route path="/onboarding" component={Onboarding} />
+      <Route path="/settings" component={Settings} />
+      <Route path="/help" component={Help} />
+      <Route path="/feedback" component={Feedback} />
       <Route path="/project/:id" component={ProjectEditor} />
       <Route path="/project/:id/cover" component={CoverDesigner} />
       <Route path="/404" component={NotFound} />

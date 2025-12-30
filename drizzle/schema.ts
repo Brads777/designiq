@@ -10,6 +10,19 @@ export const users = mysqlTable("users", {
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  
+  // Stripe integration
+  stripeCustomerId: varchar("stripeCustomerId", { length: 255 }),
+  stripeSubscriptionId: varchar("stripeSubscriptionId", { length: 255 }),
+  subscriptionStatus: mysqlEnum("subscriptionStatus", ["none", "active", "canceled", "past_due", "lifetime"]).default("none").notNull(),
+  subscriptionPlan: mysqlEnum("subscriptionPlan", ["none", "monthly", "annual", "lifetime"]).default("none").notNull(),
+  
+  // Onboarding
+  hasAcceptedTos: boolean("hasAcceptedTos").default(false).notNull(),
+  tosAcceptedAt: timestamp("tosAcceptedAt"),
+  hasCompletedOnboarding: boolean("hasCompletedOnboarding").default(false).notNull(),
+  onboardingStep: int("onboardingStep").default(0).notNull(),
+  
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -176,3 +189,57 @@ export const exportJobs = mysqlTable("exportJobs", {
 
 export type ExportJob = typeof exportJobs.$inferSelect;
 export type InsertExportJob = typeof exportJobs.$inferInsert;
+
+
+/**
+ * User feedback submissions
+ */
+export const feedback = mysqlTable("feedback", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  
+  type: mysqlEnum("type", ["bug", "feature", "general", "support"]).notNull(),
+  subject: varchar("subject", { length: 255 }).notNull(),
+  message: text("message").notNull(),
+  
+  // Optional context
+  pageUrl: varchar("pageUrl", { length: 500 }),
+  browserInfo: text("browserInfo"),
+  
+  // Status tracking
+  status: mysqlEnum("status", ["new", "reviewed", "resolved", "closed"]).default("new").notNull(),
+  adminNotes: text("adminNotes"),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Feedback = typeof feedback.$inferSelect;
+export type InsertFeedback = typeof feedback.$inferInsert;
+
+/**
+ * User settings/preferences
+ */
+export const userSettings = mysqlTable("userSettings", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(),
+  
+  // Notification preferences
+  emailNotifications: boolean("emailNotifications").default(true).notNull(),
+  marketingEmails: boolean("marketingEmails").default(false).notNull(),
+  
+  // Default project settings
+  defaultTheme: varchar("defaultTheme", { length: 64 }).default("classic-fiction"),
+  defaultPaperType: mysqlEnum("defaultPaperType", ["white", "cream", "color"]).default("cream"),
+  defaultTrimSize: varchar("defaultTrimSize", { length: 20 }).default("6x9"),
+  
+  // UI preferences
+  showTutorialTips: boolean("showTutorialTips").default(true).notNull(),
+  compactView: boolean("compactView").default(false).notNull(),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type UserSettings = typeof userSettings.$inferSelect;
+export type InsertUserSettings = typeof userSettings.$inferInsert;

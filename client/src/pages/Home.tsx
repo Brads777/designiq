@@ -39,6 +39,9 @@ export default function Home() {
             <span className="text-xl font-bold text-foreground">DesignIQ</span>
           </div>
           <div className="flex items-center gap-4">
+            <Button variant="ghost" onClick={() => setLocation("/pricing")}>
+              Pricing
+            </Button>
             {isAuthenticated ? (
               <>
                 <span className="text-sm text-muted-foreground">Welcome, {user?.name}</span>

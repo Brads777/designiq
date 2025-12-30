@@ -19,7 +19,9 @@ import {
   Trash2,
   Edit,
   ArrowRight,
-  LogOut
+  LogOut,
+  Settings,
+  HelpCircle
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -115,6 +117,12 @@ export default function Dashboard() {
           </div>
           
           <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => setLocation("/help")}>
+              <HelpCircle className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={() => setLocation("/settings")}>
+              <Settings className="h-4 w-4" />
+            </Button>
             <span className="text-sm text-muted-foreground">{user?.name || user?.email}</span>
             <Button variant="ghost" size="icon" onClick={handleLogout}>
               <LogOut className="h-4 w-4" />
